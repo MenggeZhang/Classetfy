@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Mengge's Demo</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+
+    <style>
+        .analysis_result{
+            margin: 20px;
+            margin-top: 40px;
+        }
+        form {
+            margin: 20px;
+            margin-top: 20px;
+        }
+        .form-check {
+            margin-left: 3px;
+            margin-top: 8px;
+        }
+        input[type=checkbox] {
+            transform: scale(1.25);
+        }
+        .form-check-label {
+            font-size: 16px;
+        }
+        button {
+            margin-top: 8px;
+        }
+        #error_log {
+            margin: 20px;
+            margin-top: 30px;
+            color: brown;
+        }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/classetfy">Classetfy</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/classetfy">Home <span class="sr-only">(current)</span></a>
+            </li>
+          </ul>
+        </div>
+        <ul class="navbar-nav">
+            <li class="nav-item pull-right">Mengge (Maggie) Zhang</li>
+        </ul>
+
+      </nav>
+
+      <form id="singleIpForm" action="/single_ip_analysis" method="get">
+        <div class="form-group">
+            <input class="form-control" id="id_addr_field" placeholder="Enter a URL or IP address (e.g. http://www.google.com)">
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="analysis1">
+            <label class="form-check-label" for="analysis1">HTML Tag Frequency</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="analysis2">
+            <label class="form-check-label" for="analysis2">Webpage Word Frequency</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="analysis3">
+            <label class="form-check-label" for="analysis3">Customer vs. Internal-facing Prediction</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Analyze</button>
+      </form>
+
+      <div>
+          <div id="results_div">
+                <div id="error_log"></div>
+                <div id="analysis_1" class="analysis_result"></div>
+                <div id="analysis_2" class="analysis_result"></div>
+                <div id="analysis_3" class="analysis_result"></div>
+          </div>
+      </div>
+
+    <script>
+        $(document).ready(function(){
+            $("#singleIpForm").submit(function(event){
+                event.preventDefault(); //prevent default action 
+                var post_url = $(this).attr("action"); //get form action url
+                var request_method = $(this).attr("method"); //get form GET/POST method
+                var analysis_list = ["surething"];
+                
+                var data = {}
+                data["ip_addr"] = $("#id_addr_field").val();
+                if($("#analysis1").is(':checked')) data["analysis1"] = "analysis1";
+                if($("#analysis2").is(':checked')) data["analysis2"] = "analysis2";
+                if($("#analysis3").is(':checked')) data["analysis3"] = "analysis3";
+                $.ajax({
+                    url : post_url,
+                    type: request_method,
+                    data : data,
+                    success: function(response) {
+                        // check status
+                        console.log(response.status);
+                        $("#error_log").empty();
+                        if (response.status == "failure") {
+                            $('<h5>An error has occured: ' + response.error_msg + '</h5>').appendTo('#error_log'); 
+                            return
+                        }
+                        // clear all div contents
+                        $("#analysis_1").empty();
+                        $("#analysis_2").empty();
+                        $("#analysis_3").empty();
+
+                        if ('analysis_1_result' in response) {
+                            var tag_frequencies = response.analysis_1_result;
+                            var keys = $.map(tag_frequencies, function(value, key) { return '&lt;' + key + '&gt;' });
+                            console.log('keys : ' + keys);
+                            var values = $.map(tag_frequencies, function(value, key) { return value });
+                            Highcharts.chart('analysis_1', {
+                                chart: {
+                                    type: 'column'
+                                },
+                                title: {
+                                    text: 'HTML Tag Frequency',
+                                    style: {
+                                        fontSize: "22px"
+                                    }
+                                },
+                                xAxis: {
+                                    categories: keys,
+                                    crosshair: true,
+                                    labels: {
+                                        style: {
+                                            fontSize: "16px"
+                                        }
+                                    }
+                                },
+                                yAxis: {
+                                    min: 0,
+                                    title: {
+                                        text: 'Frequency',
+                                        style: {
+                                            fontSize: "16px"
+                                        }
+                                    },
+
+                                },
+                                tooltip: {
+                                    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                                    pointFormat: '<tr><td style="color:{series.color};padding:0">frequency: </td>' +
+                                        '<td style="padding:0"><b>{point.y}</b></td></tr>',
+                                    footerFormat: '</table>',
+                                    shared: true,
+                                    useHTML: true
+                                },
+                                plotOptions: {
+                                    column: {
+                                        pointPadding: 0.2,
+                                        borderWidth: 0
+                                    }
+                                },
+                                series: [{
+                                    name: 'HTML tag in ' + $("#id_addr_field").val(),
+                                    data: values
+                                }]
+                            });
+                        }
+                        if ('analysis_2_result' in response) {
+                            var word_frequencies = response.analysis_2_result;
+                            var keys = $.map(word_frequencies, function(value, key) { return key });
+                            var values = $.map(word_frequencies, function(value, key) { return value });
+                            Highcharts.chart('analysis_2', {
+                                chart: {
+                                    type: 'column'
+                                },
+                                title: {
+                                    text: 'Webpage Word Frequency',
+                                    style: {
+                                        fontSize: "22px"
+                                    }
+                                },
+                                xAxis: {
+                                    categories: keys,
+                                    crosshair: true,
+                                    labels: {
+                                        style: {
+                                            fontSize: "16px"
+                                        }
+                                    }
+                                },
+                                yAxis: {
+                                    min: 0,
+                                    title: {
+                                        text: 'Frequency',
+                                        style: {
+                                            fontSize: "16px"
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                                    pointFormat: '<tr><td style="color:{series.color};padding:0">frequency: </td>' +
+                                        '<td style="padding:0"><b>{point.y}</b></td></tr>',
+                                    footerFormat: '</table>',
+                                    shared: true,
+                                    useHTML: true
+                                },
+                                plotOptions: {
+                                    column: {
+                                        pointPadding: 0.2,
+                                        borderWidth: 0
+                                    }
+                                },
+                                series: [{
+                                    name: 'Top 25 most frequent words in ' + $("#id_addr_field").val(),
+                                    data: values
+                                }]
+                            });
+                        }
+                        if ('analysis_3_result' in response) {
+                            var prob_customer = response.analysis_3_result['prob_customer'];
+                            var prob_internal = response.analysis_3_result['prob_internal'];
+                            Highcharts.chart('analysis_3', {
+                                chart: {
+                                    plotBackgroundColor: null,
+                                    plotBorderWidth: null,
+                                    plotShadow: false,
+                                    type: 'pie'
+                                },
+                                title: {
+                                    text: 'Customer vs. Internal-facing Prediction',
+                                    style: {
+                                        fontSize: "22px"
+                                    }
+                                },
+                                subtitle: {
+                                    text: 'ML with Random Forest'
+                                },
+                                tooltip: {
+                                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                                },
+                                plotOptions: {
+                                    pie: {
+                                        allowPointSelect: true,
+                                        cursor: 'pointer',
+                                        dataLabels: {
+                                            enabled: true,
+                                            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                            style: {
+                                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black',
+                                                fontSize : "20px"
+                                            }
+                                        }
+                                    }
+                                },
+                                series: [{
+                                    name: 'Probability',
+                                    colorByPoint: true,
+                                    data: [{
+                                        name: 'Customer-facing',
+                                        y: prob_customer
+                                    }, {
+                                        name: 'Internal-facing',
+                                        y: prob_internal
+                                    }]
+                                }]
+                            });
+                        }
+                    },
+                    error: function(error) {
+                        console.log(error);
+                        $("#error_log").empty();
+                        $('<h5>An error has occured: ' + error + '</h5>').appendTo('#error_log'); 
+                    }
+                });
+            });
+        });
+    </script>
+  </body>
+</html>

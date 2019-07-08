@@ -1,0 +1,20 @@
+<!doctype html>
+
+<html>
+<head>
+ <title>Mengge Project Demo</title>
+</head>
+
+<body>
+    <h2>Please enter an IP address:</h2>
+    <form action="/results" method="get">
+        IP address: <input type="text" name="ip_addr"><br>
+        <input type="submit" value="Submit">
+    </form>
+    <div>
+        <h2>The IP address "{{ ip_addr }}" you provided is not valid, please try again!</h2>
+    </div>
+</body>
+
+</html>
+

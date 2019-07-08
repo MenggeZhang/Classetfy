@@ -1,0 +1,95 @@
+<!doctype html>
+
+<html>
+<head>
+    <title>Mengge Project Demo</title>
+    <style>
+        body {font-family: Arial;}
+        
+        /* Style the tab */
+        .tab {
+          overflow: hidden;
+          border: 1px solid #ccc;
+          background-color: #f1f1f1;
+        }
+        
+        /* Style the buttons inside the tab */
+        .tab button {
+          background-color: inherit;
+          float: left;
+          border: none;
+          outline: none;
+          cursor: pointer;
+          padding: 14px 16px;
+          transition: 0.3s;
+          font-size: 17px;
+        }
+        
+        /* Change background color of buttons on hover */
+        .tab button:hover {
+          background-color: #ddd;
+        }
+        
+        /* Create an active/current tablink class */
+        .tab button.active {
+          background-color: #ccc;
+        }
+        
+        /* Style the tab content */
+        .tabcontent {
+          display: none;
+          padding: 6px 12px;
+          border: 1px solid #ccc;
+          border-top: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="tab">
+        <button class="tablinks" onclick="openAnalysis(event, 'singleIP')" id="defaultOpen">Single IP</button>
+        <button class="tablinks" onclick="openAnalysis(event, 'multipleIP')">Multiple IP</button>
+    </div>
+        
+    <div id="singleIP" class="tabcontent">
+        <h2>Please enter an IP address:</h2>
+        <form id="singleIpForm" action="/results_single_ip" method="get">
+            <input type="checkbox" name="analysis1" value="A" checked> A<br>
+            <input type="checkbox" name="analysis2" value="B" checked> B<br>
+            <input type="checkbox" name="analysis3" value="C" checked> C<br> 
+            IP address: <input type="text" name="ip_addr"><br>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+        
+    <div id="multipleIP" class="tabcontent">
+        <h2>Please upload a file containing IP addresses:</h2>
+
+        <form id="multipleIPForm" enctype="multipart/form-data" method="post" action="/results_multiple_ip">
+            <input id="fileupload" name="ipFile" type="file" />
+            <input type="submit" value="Submit" />
+        </form>
+    </div>
+        
+    <script>
+        // Get the element with id="defaultOpen" and click on it
+        function openAnalysis(evt, cityName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(cityName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        // Get the element with id="defaultOpen" and click on it
+        document.getElementById("defaultOpen").click();
+    </script>
+               
+</body>
+
+</html>
